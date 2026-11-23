@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --navy-primary: #1B2A4A;
+    --navy-hover: #131E36;
+    --canvas-bg: #F8F9FA;
+    --surface-bg: #FFFFFF;
+    --border-hairline: #E2E8F0;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #F8F9FA;
+    color: #111827;
+  }
+
+  .font-mono-tabular {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom subtle scrollbars for horizontal 11-column storyboard grid */
+.storyboard-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+.storyboard-scroll::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+.storyboard-scroll::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+.storyboard-scroll::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 5px;
+  border: 2px solid #F1F5F9;
+}
+
+.storyboard-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Keep hover-revealed controls accessible on touch tablets */
+@media (hover: none), (pointer: coarse) {
+  .touch-visible {
+    opacity: 1 !important;
+  }
+}
+
+/* Portrait tablet & mobile card view vs. Landscape / Desktop 11-column table */
+.portrait-card-view {
+  display: block;
+}
+.landscape-table-view {
+  display: none;
+}
+
+@media (min-width: 1024px) and (orientation: landscape), (min-width: 1101px) {
+  .portrait-card-view {
+    display: none;
+  }
+  .landscape-table-view {
+    display: block;
+  }
+}
+
+/* Print / PDF Export styles for A4 Landscape 1-row storyboard sheet */
+@media print {
+  .portrait-card-view {
+    display: none !important;
+  }
+  .landscape-table-view {
+    display: block !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-container {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .print-table-wrapper {
+    overflow: visible !important;
+    border: 1px solid #CBD5E1 !important;
+    box-shadow: none !important;
+  }
+
+  .print-table {
+    min-width: 100% !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 9px !important;
+  }
+
+  .print-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
