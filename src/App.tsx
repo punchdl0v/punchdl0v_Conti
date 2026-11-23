@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  FileSpreadsheet,
+  FileText,
   Layers,
   Plus,
   Printer,
@@ -15,6 +17,8 @@ import {
   SAMPLE_PROJECT,
 } from './data/sampleProject';
 import { FrameEditorModal } from './components/FrameEditorModal';
+import { GoogleDocsModal } from './components/GoogleDocsModal';
+import { GoogleSheetsModal } from './components/GoogleSheetsModal';
 import { PresentationView } from './components/PresentationView';
 import { PrintExportModal } from './components/PrintExportModal';
 import { ScheduleSummaryView } from './components/ScheduleSummaryView';
@@ -197,6 +201,8 @@ export default function App() {
   const [draggedEpisodeId, setDraggedEpisodeId] = useState<string | null>(null);
   const [dragOverEpisodeId, setDragOverEpisodeId] = useState<string | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isGoogleDocsModalOpen, setIsGoogleDocsModalOpen] = useState(false);
+  const [isGoogleSheetsModalOpen, setIsGoogleSheetsModalOpen] = useState(false);
   const [editingContext, setEditingContext] = useState<{
     sceneId: string;
     shotId: string;
@@ -381,6 +387,59 @@ export default function App() {
     setSceneIdFilter('ALL');
     setActiveTab('sheet');
     showNotice('새 씬과 첫 컷이 추가되었습니다.');
+    window.setTimeout(() => {
+      sceneEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 80);
+  };
+
+  const handleImportSceneFromDocs = (sceneTitle: string, lines: string[]) => {
+    if (!activeEpisode) return;
+    const importedLines = lines.slice(0, 30);
+    const shots: StoryboardShot[] =
+      importedLines.length > 0
+        ? importedLines.map((line, index) => ({
+            ...createEmptyShot(index + 1, String(index + 1)),
+            description: line,
+          }))
+        : [createEmptyShot(1, '1')];
+
+    const newScene: StoryboardScene = {
+      id: `scene-docs-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      epLabel: '',
+      sceneLabel: sceneTitle,
+      shots,
+    };
+
+    updateActiveEpisode((ep) => ({
+      ...ep,
+      scenes: [...ep.scenes, newScene],
+    }));
+    setSearchQuery('');
+    setSceneIdFilter('ALL');
+    setActiveTab('sheet');
+    showNotice(`Google Docs '${sceneTitle}' 내용을 새 씬(${shots.length}컷)으로 불러왔습니다.`);
+    window.setTimeout(() => {
+      sceneEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 80);
+  };
+
+  const handleImportScenesFromSheets = (
+    importedScenes: StoryboardScene[],
+    sourceTitle: string
+  ) => {
+    if (!activeEpisode || importedScenes.length === 0) return;
+    const totalImportedShots = importedScenes.reduce((sum, sc) => sum + sc.shots.length, 0);
+
+    updateActiveEpisode((ep) => ({
+      ...ep,
+      scenes: [...ep.scenes, ...importedScenes],
+    }));
+    setSearchQuery('');
+    setSceneIdFilter('ALL');
+    setActiveTab('sheet');
+    showNotice(
+      `Google Sheets '${sourceTitle}'에서 ${importedScenes.length}개 씬(${totalImportedShots}컷)을 불러왔습니다.`
+    );
     window.setTimeout(() => {
       sceneEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, 80);
@@ -984,8 +1043,26 @@ export default function App() {
                 )}
               </div>
 
-              {/* Right: CSV Export & + 새 씬 추가 / + 새 컷 추가 */}
+              {/* Right: Google Docs, CSV Export & + 새 씬 추가 / + 새 컷 추가 */}
               <div className="flex flex-wrap items-center justify-end gap-2 w-full lg:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleDocsModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#1B2A4A]" />
+                  Google Docs
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleSheetsModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#1B2A4A]" />
+                  Google Sheets
+                </button>
+
                 <button
                   type="button"
                   onClick={() => exportStoryboardToCSV(project)}
@@ -1217,6 +1294,28 @@ export default function App() {
           project={project}
           episode={activeEpisode}
           onClose={() => setIsPrintModalOpen(false)}
+        />
+      )}
+
+      {/* Google Docs Integration Modal */}
+      {activeEpisode && (
+        <GoogleDocsModal
+          isOpen={isGoogleDocsModalOpen}
+          project={project}
+          episode={activeEpisode}
+          onClose={() => setIsGoogleDocsModalOpen(false)}
+          onImportScene={handleImportSceneFromDocs}
+        />
+      )}
+
+      {/* Google Sheets Integration Modal */}
+      {activeEpisode && (
+        <GoogleSheetsModal
+          isOpen={isGoogleSheetsModalOpen}
+          project={project}
+          episode={activeEpisode}
+          onClose={() => setIsGoogleSheetsModalOpen(false)}
+          onImportScenes={handleImportScenesFromSheets}
         />
       )}
     </div>
